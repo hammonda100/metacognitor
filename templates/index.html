@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Learning Mind</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a2e;
+            --text: #e0e0ff;
+            --text2: #9090b0;
+            --accent: #7c3aed;
+            --accent2: #06b6d4;
+            --accent3: #ec4899;
+            --border: #2a2a3e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            font-size: 1.1rem;
+            color: var(--accent2);
+            margin-bottom: 8px;
+        }
+        .stat-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .stat-card h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text2);
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .trait-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+        .trait-bar label {
+            width: 90px;
+            color: var(--text2);
+        }
+        .bar-track {
+            flex: 1;
+            height: 6px;
+            background: var(--surface);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease, background 0.3s;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 32px;
+            gap: 16px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.4rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text2);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .chat-area {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent), #5b21b6);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-mind {
+            align-self: flex-start;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        .msg-meta {
+            font-size: 0.7rem;
+            color: var(--text2);
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        .input-area input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            border-color: var(--accent);
+        }
+        .input-area button {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .input-area button:hover { transform: scale(1.02); }
+        .input-area button:active { transform: scale(0.98); }
+        .input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .typing {
+            display: none;
+            align-self: flex-start;
+            color: var(--text2);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+        .energy-viz {
+            display: flex;
+            gap: 3px;
+            height: 30px;
+            align-items: flex-end;
+        }
+        .energy-bar {
+            flex: 1;
+            background: var(--accent3);
+            border-radius: 2px 2px 0 0;
+            opacity: 0.6;
+            transition: height 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="stat-card">
+            <h2>Memory</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                    <h3>Attractors</h3>
+                    <div class="stat-value" id="stat-attractors">0</div>
+                </div>
+                <div>
+                    <h3>Residues</h3>
+                    <div class="stat-value" id="stat-residues">0</div>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <h3>Avg Weight</h3>
+                <div class="stat-value" id="stat-weight" style="font-size:1.1rem;">0.00</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h2>Energy Field</h2>
+            <div class="energy-viz" id="energy-viz"></div>
+        </div>
+
+        <div class="stat-card">
+            <h2>Personality Traits</h2>
+            <div id="traits-container"></div>
+        </div>
+
+        <div class="stat-card">
+            <h2>Voice Markers</h2>
+            <div id="voice-container"></div>
+        </div>
+
+        <div class="stat-card">
+            <h2>System</h2>
+            <div style="font-size:0.8rem;color:var(--text2);line-height:1.6;">
+                <div>Interactions: <span id="stat-interactions" style="color:var(--accent2);">0</span></div>
+                <div>Life Signals: <span id="stat-life" style="color:var(--accent3);">0.00</span></div>
+                <div>Residue Growth: <span id="stat-growth" style="color:var(--accent);">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h1>Continuous Learning Mind</h1>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="conn-status">Connected</span>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            <div class="msg-mind message">
+                <div>Welcome. I am a continuously evolving mind. Every interaction shapes my personality, my memory, and my way of seeing the world. What would you like to explore?</div>
+                <div class="msg-meta">Mind · Initial state</div>
+            </div>
+        </div>
+
+        <div class="typing" id="typing">Mind is thinking...</div>
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Say something to shape my mind..." autocomplete="off">
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/ws/chat`);
+        const chatArea = document.getElementById('chat-area');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typing = document.getElementById('typing');
+        const connStatus = document.getElementById('conn-status');
+
+        const traitColors = {
+            openness: '#7c3aed', conscientiousness: '#06b6d4', extraversion: '#ec4899',
+            agreeableness: '#22c55e', neuroticism: '#f59e0b', curiosity: '#8b5cf6',
+            playfulness: '#f472b6', empathy: '#10b981', assertiveness: '#ef4444',
+            creativity: '#a855f7'
+        };
+
+        ws.onopen = () => { connStatus.textContent = 'Connected'; };
+        ws.onclose = () => { connStatus.textContent = 'Disconnected'; };
+        ws.onerror = () => { connStatus.textContent = 'Error'; };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            typing.style.display = 'none';
+            sendBtn.disabled = false;
+
+            if (data.error) {
+                appendMessage('system', `Error: ${data.error}`);
+                return;
+            }
+
+            appendMessage('mind', data.response, `Residue growth: ${data.residue_growth} · Life: ${data.life_signals.toFixed(2)}`);
+            updateStats(data);
+        };
+
+        function appendMessage(role, text, meta = '') {
+            const div = document.createElement('div');
+            div.className = `message msg-${role}`;
+            div.innerHTML = `<div>${escapeHtml(text)}</div>${meta ? `<div class="msg-meta">${escapeHtml(meta)}</div>` : ''}`;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || ws.readyState !== WebSocket.OPEN) return;
+            appendMessage('user', text);
+            userInput.value = '';
+            sendBtn.disabled = true;
+            typing.style.display = 'block';
+            ws.send(JSON.stringify({ text }));
+        }
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function updateStats(data) {
+            const mem = data.memory_stats;
+            document.getElementById('stat-attractors').textContent = mem.attractors;
+            document.getElementById('stat-residues').textContent = mem.total_residues;
+            document.getElementById('stat-weight').textContent = mem.avg_weight.toFixed(3);
+            document.getElementById('stat-life').textContent = data.life_signals.toFixed(2);
+            document.getElementById('stat-growth').textContent = data.residue_growth;
+
+            const p = data.personality_snapshot;
+            document.getElementById('stat-interactions').textContent = p.interaction_count;
+
+            renderBars(p.traits, 'traits-container');
+            renderBars(p.voice_markers, 'voice-container');
+            renderEnergy(data.life_signals);
+        }
+
+        function renderBars(obj, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (const [key, val] of Object.entries(obj)) {
+                const row = document.createElement('div');
+                row.className = 'trait-bar';
+                const color = traitColors[key] || '#7c3aed';
+                row.innerHTML = `
+                    <label>${key}</label>
+                    <div class="bar-track"><div class="bar-fill" style="width:${(val*100).toFixed(0)}%;background:${color}"></div></div>
+                    <span style="width:30px;text-align:right;font-size:0.75rem;color:var(--text2);">${val.toFixed(2)}</span>
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        function renderEnergy(life) {
+            const container = document.getElementById('energy-viz');
+            container.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'energy-bar';
+                const h = 10 + Math.random() * 80 * (0.5 + life * 0.5);
+                bar.style.height = `${h}%`;
+                container.appendChild(bar);
+            }
+        }
+
+        // Initial energy render
+        renderEnergy(0);
+
+        // Fetch initial stats
+        fetch('/api/stats').then(r => r.json()).then(d => {
+            if (d.personality) {
+                document.getElementById('stat-interactions').textContent = d.personality.interaction_count;
+                renderBars(d.personality.traits, 'traits-container');
+                renderBars(d.personality.voice_markers, 'voice-container');
+            }
+            if (d.memory) {
+                document.getElementById('stat-attractors').textContent = d.memory.attractors;
+                document.getElementById('stat-residues').textContent = d.memory.total_residues;
+                document.getElementById('stat-weight').textContent = d.memory.avg_weight.toFixed(3);
+            }
+        }).catch(() => {});
+    </script>
+</body>
+</html>
